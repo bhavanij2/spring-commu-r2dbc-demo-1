@@ -2,14 +2,14 @@ package com.example.springcommur2dbcdemo1.scorecard.service;
 
 import com.example.springcommur2dbcdemo1.scorecard.dto.*;
 import com.example.springcommur2dbcdemo1.scorecard.model.Account;
+import com.example.springcommur2dbcdemo1.scorecard.model.User;
 import com.example.springcommur2dbcdemo1.scorecard.model.UserType;
 import com.example.springcommur2dbcdemo1.scorecard.repository.AccountRepository;
 import com.example.springcommur2dbcdemo1.scorecard.repository.UserRespository;
 import com.example.springcommur2dbcdemo1.scorecard.repository.UserTypeRepository;
+import com.example.springcommur2dbcdemo1.scorecard.utils.UserTypeEnum;
 import io.vavr.collection.List;
 import io.vavr.collection.Map;
-import io.vavr.collection.Set;
-import io.vavr.control.Option;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
@@ -32,7 +32,11 @@ public class UserService {
     }
 
     public Mono<AccountDetails> findAllAccountDetailsByUserName(String userName) {
-        return accountRepository.findByKam(userName)
+        return userRespository.findById(userName)
+                .flatMapMany(this::findAllKamsForUser)
+                .map(User::getUserName)
+                .collectList()
+                .flatMapMany(kamUsers -> accountRepository.findByKamIn(kamUsers))
                 .collectList()
                 .map(List::ofAll)
                 .map(userList -> userList.groupBy(Account::getZoneName)
@@ -40,6 +44,19 @@ public class UserService {
                                             .mapValues(districtGroup -> districtGroup.groupBy(Account::getIdn)))
                 )
                 .map(this::mapToAccountDetailsDto);
+    }
+
+
+    private Flux<User> findAllKamsForUser(User user) {
+            if (user.getUserType().equals(UserTypeEnum.KAM.name())) {
+                return Flux.just(user);
+            } else if (user.getUserType().equals(UserTypeEnum.DSM.name())) {
+                return userRespository.findByParentUserAndUserType(user.getUserName(), UserTypeEnum.KAM.name());
+            } else if (user.getUserType().equals(UserTypeEnum.ADMIN.name())) {
+                return userRespository.findByUserType(UserTypeEnum.KAM.name());
+            } else {
+                return Flux.error(new RuntimeException("No accounts exist for User"));
+            }
     }
 
     private AccountDetails mapToAccountDetailsDto(Map<String, Map<String, Map<String, List<Account>>>> groupMap) {
