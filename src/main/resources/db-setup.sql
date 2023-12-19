@@ -13,6 +13,7 @@ INSERT INTO DIM_USER_TYPE (user_type, user_type_desc) VALUES ('KAM', 'KAM');
 
 select * from dim_user_type;
 
+-- ********* District column not needed below
 CREATE TABLE IF NOT EXISTS DIM_USER (
     user_name varchar(100) PRIMARY KEY,
     parent_user varchar(100) NOT NULL REFERENCES DIM_USER,
@@ -27,6 +28,7 @@ INSERT INTO DIM_USER (user_name, parent_user, user_type, district) VALUES ('Brad
 INSERT INTO DIM_USER (user_name, parent_user, user_type, district) VALUES ('Nirmal Amarender', 'Nirmal Amarender', 'DSM', 'Metro NYC');
 INSERT INTO DIM_USER (user_name, parent_user, user_type, district) VALUES ('Kaleigh Costello', 'Nirmal Amarender', 'KAM', 'Metro NYC');
 INSERT INTO DIM_USER (user_name, parent_user, user_type, district) VALUES ('Benjamin Carlos', 'Nirmal Amarender', 'KAM', 'Metro NYC');
+INSERT INTO DIM_USER (user_name, parent_user, user_type, district) VALUES ('Janet Scott', 'Janet Scott', 'ADMIN', 'Dummy');
 
 select * from dim_user;
 
@@ -178,6 +180,7 @@ VALUES ('SCORECARD', 2, 3, 6, 6);
 
 select * from FACT_FORM_SECTION_SUB_SECTION_QUESTIONS;
 
+-- ************ account_name should be uploaded as ascending order coma separated list so that can be compared
 CREATE TABLE IF NOT EXISTS FACT_SCORECARD_KEY (
     id SERIAL PRIMARY KEY,
     zone_name varchar(100) NOT NULL,
